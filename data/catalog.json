@@ -1,0 +1,116 @@
+{
+  "decks": [
+    {
+      "id": "lesson4",
+      "source": "課本",
+      "unit": "Lesson 4",
+      "label": "課本｜Lesson 4",
+      "file": "lesson4.csv"
+    },
+    {
+      "id": "lesson5",
+      "source": "課本",
+      "unit": "Lesson 5",
+      "label": "課本｜Lesson 5",
+      "file": "lesson5.csv"
+    },
+    {
+      "id": "lesson6",
+      "source": "課本",
+      "unit": "Lesson 6",
+      "label": "課本｜Lesson 6",
+      "file": "lesson6.csv"
+    },
+    {
+      "id": "review4",
+      "source": "課本",
+      "unit": "Review 4",
+      "label": "課本｜Review 4",
+      "file": "review4.csv"
+    },
+    {
+      "id": "oct_unit8",
+      "source": "雜誌",
+      "unit": "October Unit 8",
+      "label": "雜誌｜October Unit 8",
+      "file": "oct_unit8.csv"
+    },
+    {
+      "id": "oct_unit9",
+      "source": "雜誌",
+      "unit": "October Unit 9",
+      "label": "雜誌｜October Unit 9",
+      "file": "oct_unit9.csv"
+    },
+    {
+      "id": "oct_unit10",
+      "source": "雜誌",
+      "unit": "October Unit 10",
+      "label": "雜誌｜October Unit 10",
+      "file": "oct_unit10.csv"
+    },
+    {
+      "id": "oct_unit11",
+      "source": "雜誌",
+      "unit": "October Unit 11",
+      "label": "雜誌｜October Unit 11",
+      "file": "oct_unit11.csv"
+    },
+    {
+      "id": "oct_unit12",
+      "source": "雜誌",
+      "unit": "October Unit 12",
+      "label": "雜誌｜October Unit 12",
+      "file": "oct_unit12.csv"
+    },
+    {
+      "id": "oct_unit13",
+      "source": "雜誌",
+      "unit": "October Unit 13",
+      "label": "雜誌｜October Unit 13",
+      "file": "oct_unit13.csv"
+    },
+    {
+      "id": "nov_unit1",
+      "source": "雜誌",
+      "unit": "November Unit 1",
+      "label": "雜誌｜November Unit 1",
+      "file": "nov_unit1.csv"
+    },
+    {
+      "id": "nov_unit2",
+      "source": "雜誌",
+      "unit": "November Unit 2",
+      "label": "雜誌｜November Unit 2",
+      "file": "nov_unit2.csv"
+    },
+    {
+      "id": "nov_unit3",
+      "source": "雜誌",
+      "unit": "November Unit 3",
+      "label": "雜誌｜November Unit 3",
+      "file": "nov_unit3.csv"
+    },
+    {
+      "id": "nov_unit4",
+      "source": "雜誌",
+      "unit": "November Unit 4",
+      "label": "雜誌｜November Unit 4",
+      "file": "nov_unit4.csv"
+    },
+    {
+      "id": "nov_unit5",
+      "source": "雜誌",
+      "unit": "November Unit 5",
+      "label": "雜誌｜November Unit 5",
+      "file": "nov_unit5.csv"
+    },
+    {
+      "id": "nov_unit6",
+      "source": "雜誌",
+      "unit": "November Unit 6",
+      "label": "雜誌｜November Unit 6",
+      "file": "nov_unit6.csv"
+    }
+  ]
+}
