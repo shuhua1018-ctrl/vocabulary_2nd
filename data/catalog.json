@@ -29,13 +29,6 @@
       "file": "lesson6.csv"
     },
     {
-      "id": "review4",
-      "source": "課本",
-      "unit": "Review 4",
-      "label": "課本｜Review 4",
-      "file": "review4.csv"
-    },
-    {
       "id": "oct_unit8",
       "source": "雜誌",
       "unit": "October Unit 8",
