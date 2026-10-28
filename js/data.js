@@ -55,37 +55,53 @@ function section(back, names) {
 }
 
 export async function loadWords() {
-  const response = await fetch("./data/nov_unit1.csv", { cache: "no-store" });
-  if (!response.ok) throw new Error(`題庫讀取失敗（HTTP ${response.status}），請確認 data/nov_unit1.csv 路徑。`);
-  const text = await response.text();
-  const rows = parseCSV(text);
-  if (rows.length < 2) throw new Error("CSV 沒有可用的單字資料。");
+  const catalogResponse = await fetch("./data/catalog.json", { cache: "no-store" });
+  if (!catalogResponse.ok) throw new Error("教材目錄讀取失敗，請確認 data/catalog.json 已上傳。");
+  const catalog = await catalogResponse.json();
+  if (!Array.isArray(catalog.decks) || !catalog.decks.length) throw new Error("教材目錄沒有設定任何 CSV 題庫。");
 
-  const headers = rows[0].map(v => v.trim().toLowerCase());
-  const frontIndex = headers.findIndex(v => ["正面", "word", "front", "單字"].includes(v));
-  const backIndex = headers.findIndex(v => ["背面", "meaning", "back", "中文"].includes(v));
-  if (frontIndex < 0 || backIndex < 0) throw new Error("CSV 欄位應為「正面,背面」或 word,meaning。");
+  const allWords = [];
+  const errors = [];
+  for (const deck of catalog.decks) {
+    try {
+      const response = await fetch(`./data/${encodeURIComponent(deck.file).replace(/%2F/gi, "/")}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const rows = parseCSV(await response.text());
+      if (rows.length < 2) throw new Error("沒有可用的單字資料");
+      const headers = rows[0].map(v => v.trim().toLowerCase());
+      const frontIndex = headers.findIndex(v => ["正面", "word", "front", "單字"].includes(v));
+      const backIndex = headers.findIndex(v => ["背面", "meaning", "back", "中文"].includes(v));
+      if (frontIndex < 0 || backIndex < 0) throw new Error("CSV 欄位應為「正面,背面」或 word,meaning");
 
-  const usedIds = new Set();
-  const words = [];
-  for (const cells of rows.slice(1)) {
-    const word = (cells[frontIndex] || "").trim();
-    const back = (cells[backIndex] || "").trim();
-    if (!word || !back) continue;
-    const id = word.toLocaleLowerCase();
-    if (usedIds.has(id)) continue;
-    usedIds.add(id);
-    const first = (back.split(/\r?\n/).find(line => line.trim()) || "").trim();
-    const posMatch = first.match(/\(([^()]*)\)/);
-    words.push({
-      id, word, back,
-      meaning: cleanMeaning(back, word),
-      pos: posMatch ? posMatch[1] : "",
-      forms: section(back, ["詞性變化", "變化", "衍生字", "forms?", "derivative"]),
-      collocation: section(back, ["搭配詞", "collocation", "片語"]),
-      sentence: section(back, ["例句", "example"])
-    });
+      const usedIds = new Set();
+      for (const cells of rows.slice(1)) {
+        const word = (cells[frontIndex] || "").trim();
+        const back = (cells[backIndex] || "").trim();
+        if (!word || !back) continue;
+        const baseId = word.toLocaleLowerCase();
+        if (usedIds.has(baseId)) continue;
+        usedIds.add(baseId);
+        const first = (back.split(/\r?\n/).find(line => line.trim()) || "").trim();
+        const posMatch = first.match(/\(([^()]*)\)/);
+        allWords.push({
+          id: `${deck.id}::${baseId}`, word, back,
+          meaning: cleanMeaning(back, word),
+          pos: posMatch ? posMatch[1] : "",
+          forms: section(back, ["詞性變化", "變化", "衍生字", "forms?", "derivative"]),
+          collocation: section(back, ["搭配詞", "collocation", "片語"]),
+          sentence: section(back, ["例句", "example"]),
+          deckId: deck.id,
+          source: deck.source || "未分類教材",
+          unit: deck.unit || deck.label || deck.file,
+          deckLabel: deck.label || `${deck.source || "未分類教材"}｜${deck.unit || deck.file}`
+        });
+      }
+    } catch (error) {
+      errors.push(`${deck.file}：${error.message}`);
+    }
   }
-  if (!words.length) throw new Error("CSV 已載入，但沒有解析到有效單字。");
-  return words;
+  if (!allWords.length) throw new Error(`沒有載入任何有效單字。${errors.length ? "\n" + errors.join("\n") : ""}`);
+  // 有部分題庫可用時不中斷整個網站，但把失敗題庫列在控制台供除錯。
+  if (errors.length) console.warn("部分教材載入失敗：", errors);
+  return { words: allWords, decks: catalog.decks, errors };
 }

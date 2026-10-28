@@ -7,7 +7,7 @@ import { calculateStats } from "./statistics.js";
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const app = $("#app"), statusEl = $("#loadStatus"), toastEl = $("#toast");
-let words = [], state, page = "review", reviewQueue = [], flipped = false, currentReview = null;
+let allWords = [], words = [], decks = [], selectedSource = "all", selectedUnit = "all", state, page = "review", reviewQueue = [], flipped = false, currentReview = null;
 let quiz = null, toastTimer = null;
 
 function toast(message) {
@@ -34,6 +34,34 @@ function getFavorites() { return words.filter(w => record(w.id).favorite); }
 function getWrong() { return words.filter(w => (record(w.id).wrongCount || 0) > 0); }
 function getDue() { return words.filter(w => record(w.id).nextReviewAt && Date.parse(record(w.id).nextReviewAt) <= Date.now()); }
 
+function getFilteredWords() {
+  return allWords.filter(w => (selectedSource === "all" || w.source === selectedSource) && (selectedUnit === "all" || w.deckId === selectedUnit));
+}
+function filterBar() {
+  const sources = [...new Set(allWords.map(w => w.source))];
+  const units = allWords.filter(w => selectedSource === "all" || w.source === selectedSource)
+    .reduce((acc, w) => { if (!acc.some(d => d.id === w.deckId)) acc.push({id:w.deckId, label:w.deckLabel}); return acc; }, []);
+  return `<section class="filter-panel"><div class="filter-title"><strong>教材篩選</strong><span class="muted">選擇後會直接更新練習題庫</span></div><div class="filter-controls">
+    <label class="field">單字來源<select class="select" id="sourceFilter"><option value="all" ${selectedSource === "all" ? "selected" : ""}>全部教材</option>${sources.map(v=>`<option value="${esc(v)}" ${selectedSource === v ? "selected" : ""}>${esc(v)}</option>`).join("")}</select></label>
+    <label class="field">單元<select class="select" id="unitFilter"><option value="all" ${selectedUnit === "all" ? "selected" : ""}>全部單元</option>${units.map(v=>`<option value="${esc(v.id)}" ${selectedUnit === v.id ? "selected" : ""}>${esc(v.label)}</option>`).join("")}</select></label>
+    <div class="filter-count"><strong>${words.length}</strong><span>個單字</span></div>
+  </div></section>`;
+}
+function bindFilterBar() {
+  const sourceEl = $("#sourceFilter"), unitEl = $("#unitFilter");
+  if (!sourceEl || !unitEl) return;
+  sourceEl.addEventListener("change", () => { selectedSource = sourceEl.value; selectedUnit = "all"; applyFiltersAndRender(); });
+  unitEl.addEventListener("change", () => { selectedUnit = unitEl.value; applyFiltersAndRender(); });
+}
+function applyFiltersAndRender() {
+  words = getFilteredWords();
+  reviewQueue = shuffle(words.filter(w => !record(w.id).nextReviewAt || Date.parse(record(w.id).nextReviewAt) <= Date.now()));
+  if (!reviewQueue.length) reviewQueue = shuffle(words);
+  currentReview = reviewQueue[0] || null;
+  flipped = false;
+  render();
+}
+
 function render() {
   if (!words.length) return;
   if (page === "review") renderReview();
@@ -49,12 +77,12 @@ function renderReview() {
   if (!currentReview || !reviewQueue.some(w => w.id === currentReview.id)) currentReview = reviewQueue[0];
   if (!currentReview) { app.innerHTML = `<div class="empty">目前沒有可複習的單字。</div>`; return; }
   const w = currentReview, r = record(w.id), index = reviewQueue.findIndex(x => x.id === w.id);
-  app.innerHTML = `
+  app.innerHTML = `${filterBar()}
     <div class="panel-heading"><div><h2>單字複習</h2><p>點擊卡片翻面，使用評分安排下一次複習。</p></div><span class="pill">${index + 1} / ${reviewQueue.length}</span></div>
     <div class="review-layout">
       <div>
         <article class="flashcard" id="flashcard" role="button" tabindex="0" aria-label="點擊翻轉單字卡">
-          <div class="flashcard-top"><span class="pill">${esc(w.source || "單字題庫")}</span><button class="button" id="speakBtn">🔊 發音</button></div>
+          <div class="flashcard-top"><span class="pill">${esc(w.deckLabel || w.source || "單字題庫")}</span><button class="button" id="speakBtn">🔊 發音</button></div>
           <div class="flashcard-word">
             ${flipped ? `<h3 class="meaning">${esc(w.meaning)}</h3><span class="pill">${esc(w.pos)}</span>` : `<h3>${esc(w.word)}</h3><span class="muted">點擊卡片查看中文與例句</span>`}
             ${flipped ? `<div class="card-back"><strong>完整單字筆記</strong><br>${esc(w.back)}</div>` : ""}
@@ -79,6 +107,7 @@ function renderReview() {
         <div class="side-card"><h3>本次範圍</h3><div class="metric"><span>待複習單字</span><strong>${getDue().length}</strong></div><div class="metric"><span>收藏單字</span><strong>${getFavorites().length}</strong></div></div>
       </aside>
     </div>`;
+  bindFilterBar();
   $("#flashcard").addEventListener("click", e => { if (e.target.closest("button")) return; flipped = !flipped; renderReview(); });
   $("#flashcard").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flipped = !flipped; renderReview(); }});
   $("#speakBtn").addEventListener("click", e => { e.stopPropagation(); try { speak(w.word); } catch(err) { toast(err.message); } });
@@ -108,7 +137,7 @@ function rateWord(rating) {
 
 function renderQuizHome() {
   const favCount = getFavorites().length, wrongCount = getWrong().length;
-  app.innerHTML = `
+  app.innerHTML = `${filterBar()}
     <div class="panel-heading"><div><h2>單字測驗</h2><p>選擇題型與範圍，完成後會保存成績並更新錯題紀錄。</p></div><span class="pill">${words.length} 個單字</span></div>
     <div class="quiz-layout">
       <div class="row" style="align-items:stretch">
@@ -126,6 +155,7 @@ function renderQuizHome() {
       <button class="button button-primary" id="startQuiz">開始測驗 →</button>
     </div>
     <div class="side-card" style="margin-top:24px"><h3>最近測驗</h3>${state.sessions.length ? `<div class="history-list">${state.sessions.slice(-5).reverse().map(s=>`<div class="history-row"><div><strong>${esc(modeName(s.mode))}</strong><br><span>${new Date(s.finishedAt).toLocaleString()}</span></div><strong>${s.correct}/${s.total}（${s.total ? Math.round(s.correct/s.total*100) : 0}%）</strong></div>`).join("")}</div>` : `<p class="muted">完成第一次測驗後，這裡會顯示最近成績。</p>`}</div>`;
+  bindFilterBar();
   $("#startQuiz").addEventListener("click", startQuiz);
 }
 function modeName(mode) { return ({choice:"英文選中文",spelling:"中文拼英文",listening:"聽音辨字"})[mode] || mode; }
@@ -136,7 +166,7 @@ function startQuiz() {
   if (mode !== "spelling" && pool.length < 4) { toast("四選一至少需要 4 個可用單字。"); return; }
   pool = shuffle(pool);
   if (countValue !== "all") pool = pool.slice(0, Math.min(Number(countValue), pool.length));
-  quiz = { mode, scope, pool, index: 0, answers: [], startedAt: new Date().toISOString(), current: null, locked: false };
+  quiz = { mode, scope, source: selectedSource, unit: selectedUnit, pool, index: 0, answers: [], startedAt: new Date().toISOString(), current: null, locked: false };
   renderQuizQuestion();
 }
 function renderQuizQuestion() {
@@ -277,8 +307,10 @@ async function init() {
   bindGlobal();
   try {
     state = loadState();
-    words = await loadWords();
-    statusEl.textContent = `已載入 ${words.length} 個單字 · 紀錄儲存於此瀏覽器`;
+    const loaded = await loadWords();
+    allWords = loaded.words; decks = loaded.decks;
+    words = getFilteredWords();
+    statusEl.textContent = `已載入 ${allWords.length} 個單字、${decks.length} 個教材單元 · 紀錄儲存於此瀏覽器`;
     reviewQueue = shuffle(words);
     currentReview = reviewQueue[0] || null;
     render();
