@@ -1,0 +1,96 @@
+
+{
+  "categories": [
+    {
+      "name": "課本",
+      "books": [
+        {
+          "id": "lesson4",
+          "name": "Lesson 4",
+          "file": "lesson4.csv"
+        },
+        {
+          "id": "lesson5",
+          "name": "Lesson 5",
+          "file": "lesson5.csv"
+        },
+        {
+          "id": "lesson6",
+          "name": "Lesson 6",
+          "file": "lesson6.csv"
+        },
+        {
+          "id": "review4",
+          "name": "Review 4",
+          "file": "review4.csv"
+        }
+      ]
+    },
+    {
+      "name": "雜誌",
+      "books": [
+        {
+          "id": "oct_unit8",
+          "name": "October Unit 8",
+          "file": "oct_unit8.csv"
+        },
+        {
+          "id": "oct_unit9",
+          "name": "October Unit 9",
+          "file": "oct_unit9.csv"
+        },
+        {
+          "id": "oct_unit10",
+          "name": "October Unit 10",
+          "file": "oct_unit10.csv"
+        },
+        {
+          "id": "oct_unit11",
+          "name": "October Unit 11",
+          "file": "oct_unit11.csv"
+        },
+        {
+          "id": "oct_unit12",
+          "name": "October Unit 12",
+          "file": "oct_unit12.csv"
+        },
+        {
+          "id": "oct_unit13",
+          "name": "October Unit 13",
+          "file": "oct_unit13.csv"
+        },
+        {
+          "id": "nov_unit1",
+          "name": "November Unit 1",
+          "file": "nov_unit1.csv"
+        },
+        {
+          "id": "nov_unit2",
+          "name": "November Unit 2",
+          "file": "nov_unit2.csv"
+        },
+        {
+          "id": "nov_unit3",
+          "name": "November Unit 3",
+          "file": "nov_unit3.csv"
+        },
+        {
+          "id": "nov_unit4",
+          "name": "November Unit 4",
+          "file": "nov_unit4.csv"
+        },
+        {
+          "id": "nov_unit5",
+          "name": "November Unit 5",
+          "file": "nov_unit5.csv"
+        },
+        {
+          "id": "nov_unit6",
+          "name": "November Unit 6",
+          "file": "nov_unit6.csv"
+        }
+      ]
+    }
+  ]
+}
+
