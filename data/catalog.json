@@ -1,6 +1,13 @@
 {
   "decks": [
     {
+      "id": "review2",
+      "source": "課本",
+      "unit": "Review 2",
+      "label": "課本｜Review 2",
+      "file": "review2.csv"
+    },
+    {
       "id": "lesson4",
       "source": "課本",
       "unit": "Lesson 4",
