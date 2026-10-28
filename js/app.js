@@ -1,7 +1,7 @@
 import { loadWords } from "./data.js";
 import { loadState, saveState, getWordState, exportState, validateImport } from "./storage.js";
 import { shuffle, createChoiceQuestion, checkSpelling, recordAnswer, makeSession } from "./quiz.js";
-import { speak } from "./speech.js";
+import { speak, getEnglishVoices, getVoicePreference, setVoicePreference } from "./speech.js";
 import { calculateStats } from "./statistics.js";
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -53,6 +53,20 @@ function bindFilterBar() {
   sourceEl.addEventListener("change", () => { selectedSource = sourceEl.value; selectedUnit = "all"; applyFiltersAndRender(); });
   unitEl.addEventListener("change", () => { selectedUnit = unitEl.value; applyFiltersAndRender(); });
 }
+function voiceSettings() {
+  const voices = getEnglishVoices();
+  const saved = getVoicePreference();
+  return `<div class="side-card" style="margin-top:16px"><h3>英文發音設定（Mac／Chrome）</h3><p class="muted">選擇英文聲音後，按「試聽」比較清晰度；設定會保存在這台電腦。</p>
+    <div class="row" style="align-items:end;gap:10px;flex-wrap:wrap"><label class="field" style="flex:1;min-width:200px">英文語音<select class="select" id="voiceSelect"><option value="">自動選擇英文語音</option>${voices.map(v => { const id = `${v.name}|${v.lang}`; return `<option value="${esc(id)}" ${saved === id ? "selected" : ""}>${esc(v.name)} (${esc(v.lang)})</option>`; }).join("")}</select></label><button class="button" id="voicePreview">🔊 試聽 English pronunciation</button></div>
+    ${voices.length ? "" : `<p class="muted">尚未偵測到英文語音，請稍候重新整理，或到 Mac 系統設定下載英文語音。</p>`}</div>`;
+}
+function bindVoiceSettings() {
+  const select = $("#voiceSelect"), preview = $("#voicePreview");
+  if (!select || !preview) return;
+  select.addEventListener("change", () => { setVoicePreference(select.value); try { speak("Vocabulary pronunciation"); } catch(e) { toast(e.message); } });
+  preview.addEventListener("click", () => { try { speak("English pronunciation. Today is a beautiful day."); } catch(e) { toast(e.message); } });
+}
+
 function applyFiltersAndRender() {
   words = getFilteredWords();
   reviewQueue = shuffle(words.filter(w => !record(w.id).nextReviewAt || Date.parse(record(w.id).nextReviewAt) <= Date.now()));
@@ -108,6 +122,7 @@ function renderReview() {
       </aside>
     </div>`;
   bindFilterBar();
+  bindVoiceSettings();
   $("#flashcard").addEventListener("click", e => { if (e.target.closest("button")) return; flipped = !flipped; renderReview(); });
   $("#flashcard").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flipped = !flipped; renderReview(); }});
   $("#speakBtn").addEventListener("click", e => { e.stopPropagation(); try { speak(w.word); } catch(err) { toast(err.message); } });
@@ -156,6 +171,7 @@ function renderQuizHome() {
     </div>
     <div class="side-card" style="margin-top:24px"><h3>最近測驗</h3>${state.sessions.length ? `<div class="history-list">${state.sessions.slice(-5).reverse().map(s=>`<div class="history-row"><div><strong>${esc(modeName(s.mode))}</strong><br><span>${new Date(s.finishedAt).toLocaleString()}</span></div><strong>${s.correct}/${s.total}（${s.total ? Math.round(s.correct/s.total*100) : 0}%）</strong></div>`).join("")}</div>` : `<p class="muted">完成第一次測驗後，這裡會顯示最近成績。</p>`}</div>`;
   bindFilterBar();
+  bindVoiceSettings();
   $("#startQuiz").addEventListener("click", startQuiz);
 }
 function modeName(mode) { return ({choice:"英文選中文",spelling:"中文拼英文",listening:"聽音辨字"})[mode] || mode; }
